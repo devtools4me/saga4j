@@ -26,6 +26,7 @@ import me.devtools4.saga4j.api.Status;
 @Data
 @NoArgsConstructor
 public class StepEntity {
+
   @Id
   @NonNull
   @JsonIgnore
@@ -36,6 +37,10 @@ public class StepEntity {
   @JsonIgnore
   private SagaEntity saga;
 
+  @Column(name = "NAME")
+  @NonNull
+  private String name;
+
   @Column(name = "STATUS", length = 16)
   @Enumerated(EnumType.STRING)
   @NonNull
@@ -45,17 +50,30 @@ public class StepEntity {
   @NonNull
   private Map<String, String> input = new HashMap<>();
 
-  @Column(name = "DATE_TIME")
+  @Column(name = "START_DATE_TIME")
   @Convert(converter = LocalDateTimeAttributeConverter.class)
   @NonNull
-  private LocalDateTime dateTime;
+  private LocalDateTime startDateTime;
+
+  @Column(name = "UPDATE_DATE_TIME")
+  @Convert(converter = LocalDateTimeAttributeConverter.class)
+  @NonNull
+  private LocalDateTime updateDateTime;
 
   @Builder
-  public StepEntity(Long id, SagaEntity saga, Status status, Map<String, String> input, LocalDateTime dateTime) {
+  public StepEntity(Long id, SagaEntity saga, Status status, Map<String, String> input,
+      LocalDateTime dateTime) {
     this.id = id;
     this.saga = saga;
     this.status = status;
     this.input = input;
-    this.dateTime = dateTime;
+    this.startDateTime = dateTime;
+    this.updateDateTime = dateTime;
+  }
+
+  public StepEntity withStatus(Status status, LocalDateTime dateTime) {
+    this.status = status;
+    this.updateDateTime = dateTime;
+    return this;
   }
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -19,6 +20,7 @@ import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -43,6 +45,10 @@ public class SagaEntity {
   @JsonIgnore
   private Long id;
 
+  @Column(name = "CORRELATION_ID")
+  @NonNull
+  private UUID correlationId;
+
   @Column(name = "CONTEXT")
   @NonNull
   private String context;
@@ -65,10 +71,15 @@ public class SagaEntity {
   @NonNull
   private Map<String, String> input = new HashMap<>();
 
-  @Column(name = "DATE_TIME")
+  @Column(name = "START_DATE_TIME")
   @Convert(converter = LocalDateTimeAttributeConverter.class)
   @NonNull
-  private LocalDateTime dateTime;
+  private LocalDateTime startDateTime;
+
+  @Column(name = "UPDATE_DATE_TIME")
+  @Convert(converter = LocalDateTimeAttributeConverter.class)
+  @NonNull
+  private LocalDateTime updateDateTime;
 
   @OneToMany(
       mappedBy = "saga",
@@ -76,4 +87,25 @@ public class SagaEntity {
       fetch = FetchType.EAGER
   )
   private List<StepEntity> steps = new ArrayList<>();
+
+  @Builder
+  public SagaEntity(Long id, String context, String name, Recovery recovery,
+      Status status, Map<String, String> input, LocalDateTime dateTime,
+      List<StepEntity> steps) {
+    this.id = id;
+    this.context = context;
+    this.name = name;
+    this.recovery = recovery;
+    this.status = status;
+    this.input = input;
+    this.startDateTime = dateTime;
+    this.updateDateTime = dateTime;
+    this.steps = steps;
+  }
+
+  public SagaEntity withStatus(Status status, LocalDateTime dateTime) {
+    this.status = status;
+    this.updateDateTime = dateTime;
+    return this;
+  }
 }

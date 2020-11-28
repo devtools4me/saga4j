@@ -2,42 +2,36 @@ package me.devtools4.saga4j.api;
 
 import io.vavr.collection.List;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
-@Slf4j
-@Value
-@Builder
-public class Saga {
+public interface Saga {
+  Logger getLogger();
 
-  @NonNull
-  private String context;
-  @NonNull
-  private String name;
-  @NonNull
-  private List<Step> steps;
+  String getContext();
 
-  public Output execute(Input input) {
-    return execute(steps, input, Status.PROCESSING);
+  String getName();
+
+  io.vavr.collection.List<Step> getSteps();
+
+  default Output apply(Input input) {
+    return execute(getSteps(), input, Status.PROCESSING);
   }
 
-  private static Output execute(List<Step> steps, Input input, Status status) {
+  default Output execute(List<Step> steps, Input input, Status status) {
     return Optional.of(steps)
         .filter(x -> !x.isEmpty())
         .map(x -> {
           Step step = x.head();
-          log.info("Execute step={}", step);
-          Output out = step.execute(input);
+          getLogger().info("Execute step={}", step);
+          Output out = step.apply(input);
           return execute(x.tail(), Input.builder()
               .input(steps.head()
-                  .execute(input)
+                  .apply(input)
                   .getOutput())
               .build(), out.getStatus());
         })
         .orElseGet(() -> {
-          log.info("All steps executed, status={}", status);
+          getLogger().info("All steps executed, status={}", status);
           return Output.builder()
               .status(status)
               .output(input.getInput())

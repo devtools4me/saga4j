@@ -1,27 +1,22 @@
 package me.devtools4.saga4j.api;
 
-import io.vavr.control.Try;
-import lombok.Builder;
-import lombok.NonNull;
-import lombok.ToString;
-import lombok.Value;
+public interface Step {
 
-@Value
-@Builder
-@ToString(exclude = {"executor", "transformer", "fallback"})
-public class Step {
-  @NonNull
-  private String name;
-  @NonNull
-  private Executor executor;
-  @NonNull
-  private Transformer transformer;
-  @NonNull
-  private Fallback fallback;
+  String getName();
 
-  public Output execute(Input input) {
-    return Try.of(() -> executor.apply(input))
-        .map(transformer)
-        .getOrElseGet(e -> fallback.apply(e, input));
+  Executor getExecutor();
+
+  Transformer getTransformer();
+
+  Fallback getFallback();
+
+  default Output apply(Input input) {
+    try {
+      return getExecutor()
+          .andThen(getTransformer())
+          .apply(input);
+    } catch (Throwable e) {
+      return getFallback().apply(e, input);
+    }
   }
 }

@@ -13,7 +13,7 @@ public class SagaTest {
 
   @Test
   public void testExecute() {
-    Saga saga = Saga.builder()
+    SimpleSaga saga = SimpleSaga.builder()
         .context("Test")
         .name("test")
         .steps(List.of(
@@ -21,18 +21,17 @@ public class SagaTest {
             procStep("step2"),
             procStep("step3")))
         .build();
-    Output out = saga.execute(Input.builder()
+    Output out = saga.apply(Input.builder()
         .input(Collections.emptyMap())
         .build());
   }
 
-  private Step procStep(String name) {
-    return Step.builder()
+  private SimpleStep procStep(String name) {
+    return SimpleStep.builder()
         .name(name)
         .executor(procExec)
         .transformer(x -> x)
         .fallback((t, x) -> procExec.apply(x))
         .build();
   }
-
 }
