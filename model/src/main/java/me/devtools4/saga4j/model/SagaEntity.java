@@ -49,10 +49,6 @@ public class SagaEntity {
   @NonNull
   private UUID correlationId;
 
-  @Column(name = "CONTEXT")
-  @NonNull
-  private String context;
-
   @Column(name = "NAME")
   @NonNull
   private String name;
@@ -89,11 +85,11 @@ public class SagaEntity {
   private List<StepEntity> steps = new ArrayList<>();
 
   @Builder
-  public SagaEntity(Long id, String context, String name, Recovery recovery,
+  public SagaEntity(Long id, UUID correlationId, String name, Recovery recovery,
       Status status, Map<String, String> input, LocalDateTime dateTime,
       List<StepEntity> steps) {
     this.id = id;
-    this.context = context;
+    this.correlationId = correlationId;
     this.name = name;
     this.recovery = recovery;
     this.status = status;
