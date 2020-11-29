@@ -1,7 +1,10 @@
 package me.devtools4.saga4j.api;
 
-import io.vavr.collection.List;
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.UUID;
 import org.junit.Test;
 
 public class SagaTest {
@@ -14,9 +17,9 @@ public class SagaTest {
   @Test
   public void testExecute() {
     SimpleSaga saga = SimpleSaga.builder()
-        .context("Test")
+        .correlationId(UUID.randomUUID())
         .name("test")
-        .steps(List.of(
+        .steps(Arrays.asList(
             procStep("step1"),
             procStep("step2"),
             procStep("step3")))
@@ -24,6 +27,7 @@ public class SagaTest {
     Output out = saga.apply(Input.builder()
         .input(Collections.emptyMap())
         .build());
+    assertNotNull(out);
   }
 
   private SimpleStep procStep(String name) {

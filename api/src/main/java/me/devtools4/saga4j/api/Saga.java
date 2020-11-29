@@ -1,34 +1,36 @@
 package me.devtools4.saga4j.api;
 
-import io.vavr.collection.List;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.slf4j.Logger;
 
 public interface Saga {
-  Logger getLogger();
 
-  String getContext();
+  UUID getCorrelationId();
+
+  Logger getLogger();
 
   String getName();
 
-  io.vavr.collection.List<Step> getSteps();
+  List<Step> getSteps();
 
   default Output apply(Input input) {
-    return execute(getSteps(), input, Status.PROCESSING);
+    getLogger().info("Execute saga, correlationId={}, name={}", getCorrelationId(), getName());
+    return execute(io.vavr.collection.List.ofAll(getSteps()), input, Status.PROCESSING);
   }
 
-  default Output execute(List<Step> steps, Input input, Status status) {
+  default Output execute(io.vavr.collection.List<Step> steps, Input input, Status status) {
     return Optional.of(steps)
         .filter(x -> !x.isEmpty())
         .map(x -> {
           Step step = x.head();
           getLogger().info("Execute step={}", step);
-          Output out = step.apply(input);
+          Output out = step.apply(getCorrelationId(), input);
           return execute(x.tail(), Input.builder()
-              .input(steps.head()
-                  .apply(input)
-                  .getOutput())
-              .build(), out.getStatus());
+                  .input(out.getOutput())
+                  .build(),
+              out.getStatus());
         })
         .orElseGet(() -> {
           getLogger().info("All steps executed, status={}", status);
