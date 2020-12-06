@@ -1,16 +1,16 @@
-package me.devtools4.saga4j.repository;
+package me.devtools4.saga4j.repository.impl;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.function.Supplier;
 import javax.persistence.EntityManager;
+import me.devtools4.saga4j.repository.IdGenerator;
 
-public class SagaIdGenerator implements Supplier<Long> {
+public class EntityManagerIdGenerator implements IdGenerator<Long> {
 
   private final EntityManager em;
   private final String nextValueQuery;
 
-  public SagaIdGenerator(EntityManager em, String nextValueQuery) {
+  public EntityManagerIdGenerator(EntityManager em, String nextValueQuery) {
     this.em = em;
     this.nextValueQuery = nextValueQuery;
   }

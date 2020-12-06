@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -21,6 +22,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -31,12 +33,13 @@ import me.devtools4.saga4j.api.Status;
 @Table(
     name = "SAGAS",
     indexes = {
-        @Index(name = "IDX_SAGAS_CTX_NAME", columnList = "CONTEXT,NAME")
+        @Index(name = "IDX_CORR_ID", columnList = "CORR_ID")
     },
     uniqueConstraints = {
-        @UniqueConstraint(name = "CNSTR_SAGAS_CTX_NAME", columnNames = {"CONTEXT", "NAME"})
+        @UniqueConstraint(name = "CNSTR_SAGAS_CORR_ID", columnNames = {"CORR_ID"})
     })
 @Getter
+@EqualsAndHashCode
 @NoArgsConstructor
 public class SagaEntity {
 
@@ -45,7 +48,7 @@ public class SagaEntity {
   @JsonIgnore
   private Long id;
 
-  @Column(name = "CORRELATION_ID")
+  @Column(name = "CORR_ID")
   @NonNull
   private UUID correlationId;
 
@@ -82,21 +85,38 @@ public class SagaEntity {
       cascade = CascadeType.ALL,
       fetch = FetchType.EAGER
   )
+  @NonNull
   private List<StepEntity> steps = new ArrayList<>();
 
   @Builder
   public SagaEntity(Long id, UUID correlationId, String name, Recovery recovery,
       Status status, Map<String, String> input, LocalDateTime dateTime,
       List<StepEntity> steps) {
+    Objects.requireNonNull(id);
     this.id = id;
+
+    Objects.requireNonNull(correlationId);
     this.correlationId = correlationId;
+
+    Objects.requireNonNull(name);
     this.name = name;
+
+    Objects.requireNonNull(recovery);
     this.recovery = recovery;
+
+    Objects.requireNonNull(status);
     this.status = status;
+
+    Objects.requireNonNull(input);
     this.input = input;
+
+    Objects.requireNonNull(dateTime);
     this.startDateTime = dateTime;
     this.updateDateTime = dateTime;
+
+    Objects.requireNonNull(steps);
     this.steps = steps;
+    steps.forEach(x -> x.setSaga(this));
   }
 
   public SagaEntity withStatus(Status status, LocalDateTime dateTime) {
