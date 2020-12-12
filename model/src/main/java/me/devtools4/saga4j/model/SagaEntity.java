@@ -3,10 +3,12 @@ package me.devtools4.saga4j.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -26,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.ToString;
 import me.devtools4.saga4j.api.Recovery;
 import me.devtools4.saga4j.api.Status;
 
@@ -41,6 +44,7 @@ import me.devtools4.saga4j.api.Status;
 @Getter
 @EqualsAndHashCode
 @NoArgsConstructor
+@ToString
 public class SagaEntity {
 
   @Id
@@ -92,36 +96,49 @@ public class SagaEntity {
   public SagaEntity(Long id, UUID correlationId, String name, Recovery recovery,
       Status status, Map<String, String> input, LocalDateTime dateTime,
       List<StepEntity> steps) {
-    Objects.requireNonNull(id);
+    Objects.requireNonNull(id, "id");
     this.id = id;
 
-    Objects.requireNonNull(correlationId);
+    Objects.requireNonNull(correlationId, "correlationId");
     this.correlationId = correlationId;
 
-    Objects.requireNonNull(name);
+    Objects.requireNonNull(name, "name");
     this.name = name;
 
-    Objects.requireNonNull(recovery);
+    Objects.requireNonNull(recovery, "recovery");
     this.recovery = recovery;
 
-    Objects.requireNonNull(status);
+    Objects.requireNonNull(status, "status");
     this.status = status;
 
-    Objects.requireNonNull(input);
+    Objects.requireNonNull(input, "input");
     this.input = input;
 
-    Objects.requireNonNull(dateTime);
+    Objects.requireNonNull(dateTime, "dateTime");
     this.startDateTime = dateTime;
     this.updateDateTime = dateTime;
 
-    Objects.requireNonNull(steps);
-    this.steps = steps;
-    steps.forEach(x -> x.setSaga(this));
+    withSteps(Optional.ofNullable(steps).orElseGet(Collections::emptyList));
   }
 
   public SagaEntity withStatus(Status status, LocalDateTime dateTime) {
     this.status = status;
     this.updateDateTime = dateTime;
     return this;
+  }
+
+  public SagaEntity withSteps(List<StepEntity> steps) {
+    Objects.requireNonNull(steps, "steps");
+    this.steps = steps;
+    steps.forEach(x -> x.setSaga(this));
+    return this;
+  }
+
+  public StepEntity stepWithName(String name) {
+    return getSteps()
+        .stream()
+        .filter(x -> x.getName().equals(name))
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException());
   }
 }

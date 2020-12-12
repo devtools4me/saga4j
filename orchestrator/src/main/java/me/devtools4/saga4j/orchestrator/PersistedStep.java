@@ -19,9 +19,11 @@ import me.devtools4.saga4j.repository.SagaRepository;
 
 @Slf4j
 public class PersistedStep extends SimpleStep {
+
   private final SagaRepository repository;
 
-  public PersistedStep(String name, Executor executor, Transformer transformer, Fallback fallback, SagaRepository repository) {
+  public PersistedStep(String name, Executor executor, Transformer transformer, Fallback fallback,
+      SagaRepository repository) {
     super(name, executor, transformer, fallback);
     this.repository = repository;
   }
@@ -32,21 +34,21 @@ public class PersistedStep extends SimpleStep {
 
     SagaEntity entity = repository.findDistinctByCorrelationId(correlationId);
 
-    StepEntity stepEntity = entity.getSteps().stream()
-        .filter(x -> getName().equals(x.getName()))
-        .findFirst().get();
-
     LocalDateTime start = LocalDateTime.now();
-    stepEntity.withStatus(STARTED, start);
+    StepEntity stepEntity = entity
+        .stepWithName(getName())
+        .withStatus(STARTED, start);
 
-    repository.save(entity.withStatus(PROCESSING, start));
+    entity = repository.save(entity.withStatus(PROCESSING, start));
 
     Output output = super.apply(correlationId, input);
 
     LocalDateTime stop = LocalDateTime.now();
-    stepEntity.withStatus(PROCESSED, stop);
+    entity
+        .stepWithName(getName())
+        .withStatus(PROCESSED, stop);
 
-    repository.save(entity.withStatus(PROCESSING, stop));
+    repository.save(entity);
 
     log.info("Processed, correlationId={}", correlationId);
 
